@@ -1,9 +1,8 @@
-import { emailevent } from './../../utils/event/email.event';
 import type { Request, Response } from "express"
 import { IsignupBodyInputsDto, IconfirmEmailBodyInputsDto,IloginBodyInputsDto } from "./auth.dto"
 import {UserModel} from "../../DB/models/user.model"
 import { userRepository } from "../../DB/user.repository";
-import { compareHash, generateHash } from "../../utils/security/hash.security";
+import { compareHash } from "../../utils/security/hash.security";
 import { generateNmuberOtp } from '../../utils/otp';
 import { NotfoundException } from '../../utils/response/error.response';
 import { createlogincredentials } from '../../utils/security/token.security';
@@ -18,11 +17,10 @@ class authenticationServices {
       const otp = generateNmuberOtp()
       const user = (await this.userModel.createuser({
          data: [{
-            username, email, password: await generateHash(password),
-            confirmEmailotp: await generateHash(String(otp))
+            username, email, password,
+            confirmEmailotp:`${otp}`
          }],
       })) || []
-      emailevent.emit("confirmEmail", { to: email, otp })
       return res.status(201).json({ message: "done", data: { user } })
 
    }
@@ -60,7 +58,6 @@ class authenticationServices {
       const {email ,password}:IloginBodyInputsDto=req.body
       const user = await this.userModel.findone({
          filter:{email},
-
       })
       if(!user){
          throw new NotfoundException("invalid account")

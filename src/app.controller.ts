@@ -2,6 +2,7 @@ import express, { Request, Response, Express } from "express";
 import cors from "cors";
 import authRouter from "./modules/auth/auth.controller";
 import userRouter from "./modules/user/user.controller";
+import postRouter from "./modules/post/post.controller";
 import { connectDB } from "./DB/connection.DB";
 import {
   BadRequest,
@@ -12,6 +13,10 @@ import * as dotenv from "dotenv";
 import { promisify } from "node:util";
 import { pipeline } from "node:stream";
 import { createGetPreSignedUrl, deleteFile, deleteFiles, getFile, ListDirectoryFiles } from "./utils/multer/s3.config";
+import { UserModel } from "./DB/models/user.model";
+import { databaseRepository } from "./DB/database.repository";
+
+import { Server } from "socket.io";
 
 const writePipeLine = promisify(pipeline);
 
@@ -31,6 +36,7 @@ const bootstrap = async (): Promise<void> => {
 
   app.use("/", authRouter);
   app.use("/", userRouter);
+  app.use("/", postRouter)
 
 //   delete file // 
 app.get("/delete",async(req:Request,res:Response)=>{
@@ -105,9 +111,40 @@ app.get("/delete-list",async(req:Request,res:Response)=>{
 
   app.use(globelErrorhandling);
 
-  app.listen(port, () => {
+  // async function test() {
+  //   const userModel= new databaseRepository(UserModel)
+  //   const user = await userModel.find({
+  //     filter:{paranoid:false},
+  //     options:{
+  //       skip:0,
+  //       limit:3
+  //     }
+
+  //   })
+  //   console.log(user)}
+  // test()
+
+  // async function test(){
+  //   try {
+  //     const userModel= new databaseRepository(UserModel)
+  //     const user = await userModel.updateone({
+  //     filter: { _id: "68c8189c65e872ee1b987474" },
+  //     update:{
+  //       frezzedAt:new Date()
+  //     }
+  //   })
+  //   console.log({result:user})
+  //   } catch (error) {
+  //     console.log(error)
+  //   }
+  // }
+  // test()
+
+  const httpServer= app.listen(port, () => {
     console.log(`server is running on port ${process.env.PORT}`);
   });
+
+  const io = new Server(httpServer)
 };
 
 export default bootstrap;

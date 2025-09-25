@@ -1,9 +1,10 @@
 import { ForbiddenException } from "./../../utils/response/error.response";
 import { Request, Response, NextFunction } from "express";
+import bcrypt from "bcrypt"
 import { userRepository } from "../../DB/user.repository";
 import { Iuser, roleEnum, UserModel } from "../../DB/models/user.model";
 import { TokenRepository } from "../../DB/token.repository";
-import { Tokenmodel } from "../../DB/models/token.model";
+import { TokenModel } from "../../DB/models/token.model";
 import { IfreezeAccountDto, IlogoutDto, IrestoreAccountDto ,IhardDeleteAccountDto} from "./user.dto";
 import { logoutFlagEnum } from "../../utils/security/token.security";
 import mongoose, { UpdateQuery } from "mongoose";
@@ -18,7 +19,7 @@ import { s3event } from "../../utils/multer/s3.event";
 
 class userServices {
   private usermodel = new userRepository(UserModel);
-  private tokenmodel = new TokenRepository(Tokenmodel);
+  private tokenmodel = new TokenRepository(TokenModel);
   constructor() {}
 
   profile = async (req: Request, res: Response): Promise<Response> => {
@@ -110,6 +111,66 @@ class userServices {
     });
   };
 
+  updatePassword = async(req:Request,res:Response):Promise<Response>=>{
+        const {oldPassword , newPassword} = req.body
+        const user = await this.usermodel.findone({
+          filter:{
+            _id:req.user?._id,
+          },
+        })
+        if(!user){
+          throw new BadRequest("fail to update password")
+        }
+        const matchPasseord = await bcrypt.compare(oldPassword,user.password)
+        if(!matchPasseord){
+          throw new BadRequest("invalid old password")
+        }
+        const hashPassword = await bcrypt.hash(newPassword , 10)
+        const updatePassword = await this.usermodel.updateone({
+          filter:{
+            _id:req.user?._id
+          },
+          update:{
+            password:hashPassword
+          }
+        })
+        return res.json({message:"Done",data:{updatePassword}})
+  }
+
+  updateBasicInfo=async(req:Request , res:Response):Promise<Response>=>{
+    const {firstname , lastname , phone} = req.body
+    const updatedBasicInfo = await this.usermodel.updateone({
+      filter:{
+        _id:req.user?._id
+      },
+      update:{
+        firstname,
+        lastname,
+        phone
+      }
+    })
+    if(!updatedBasicInfo){
+      throw new BadRequest("fail to update basic info")
+    }
+    return res.json({message:"Done",data:{updatedBasicInfo}})
+  }
+
+  updateEmail = async(req:Request , res:Response):Promise<Response>=>{
+    const {email} = req.body
+    const updateEmail = await this.usermodel.updateone({
+      filter:{
+        _id:req.user?._id
+      },
+      update:{
+        email,
+      }
+    })
+    if(!updateEmail){
+      throw new BadRequest("fail to update email")
+    }
+    return res.json({message:"Done",data:{updateEmail}})
+  }
+
   freezeAccount = async (req: Request, res: Response): Promise<Response> => {
     const { userId } = (req.params as IfreezeAccountDto) || {};
     if (userId && req.user?.role !== roleEnum.admin) {
@@ -136,7 +197,7 @@ class userServices {
     return res.json({ message: "done account freezed" });
   };
 
-  restoreAccount = async (req: Request, res: Response): Promise<Response> => {
+  restoreAccount = async (req: Request, res: Response):Promise<void> => {
     const { userId } = req.params as IrestoreAccountDto;
     const user = await this.usermodel.updateone({
       filter: {
@@ -157,7 +218,7 @@ class userServices {
     }
   };
 
-  hardDeleteAccount= async(req: Request, res: Response):Promise<Response>=>{
+  hardDeleteAccount= async(req: Request, res: Response):Promise<void>=>{
     const {userId} =req.params as IhardDeleteAccountDto
     const user=await this.usermodel.deleteone({
       filter:{

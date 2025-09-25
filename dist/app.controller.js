@@ -40,6 +40,7 @@ const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
 const auth_controller_1 = __importDefault(require("./modules/auth/auth.controller"));
 const user_controller_1 = __importDefault(require("./modules/user/user.controller"));
+const post_controller_1 = __importDefault(require("./modules/post/post.controller"));
 const connection_DB_1 = require("./DB/connection.DB");
 const error_response_1 = require("./utils/response/error.response");
 const node_path_1 = __importDefault(require("node:path"));
@@ -47,6 +48,7 @@ const dotenv = __importStar(require("dotenv"));
 const node_util_1 = require("node:util");
 const node_stream_1 = require("node:stream");
 const s3_config_1 = require("./utils/multer/s3.config");
+const socket_io_1 = require("socket.io");
 const writePipeLine = (0, node_util_1.promisify)(node_stream_1.pipeline);
 dotenv.config({ path: node_path_1.default.join("src", "config", ".env.development") });
 const bootstrap = async () => {
@@ -59,6 +61,7 @@ const bootstrap = async () => {
     });
     app.use("/", auth_controller_1.default);
     app.use("/", user_controller_1.default);
+    app.use("/", post_controller_1.default);
     app.get("/delete", async (req, res) => {
         const { key } = req.query;
         const result = await (0, s3_config_1.deleteFile)({ Key: key });
@@ -112,8 +115,9 @@ const bootstrap = async () => {
         await writePipeLine(s3Response.Body, res);
     });
     app.use(error_response_1.globelErrorhandling);
-    app.listen(port, () => {
+    const httpServer = app.listen(port, () => {
         console.log(`server is running on port ${process.env.PORT}`);
     });
+    const io = new socket_io_1.Server(httpServer);
 };
 exports.default = bootstrap;

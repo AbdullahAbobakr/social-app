@@ -154,7 +154,7 @@ import { BadRequest, unauthorizationException } from '../..//utils/response/erro
 import { userRepository } from '../../DB/user.repository';
 import { v4 as uuid } from 'uuid';
 import { TokenRepository } from '../../DB/token.repository';
-import { Tokenmodel } from '../../DB/models/token.model';
+import { TokenModel } from '../../DB/models/token.model';
 
 // ================== ENUMS ==================
 export enum signtureLevelEnum {
@@ -172,7 +172,7 @@ export enum logoutFlagEnum {
 
 // ================== INTERFACES ==================
 interface CustomPayload extends JwtPayload {
-    id: string;   // لانك عامل payload: { id: user._id }
+    id: string;   
     jti?: string;
 }
 
@@ -269,7 +269,7 @@ export const decodeToken = async ({
     tokenType?: Tokenenum
 }) => {
     const userModel = new userRepository(UserModel);
-    const tokenmodel = new TokenRepository(Tokenmodel);
+    const tokenmodel = new TokenRepository(TokenModel);
 
     const [bearerKey, token] = authorization.split(" ");
     if (!bearerKey || !token) {

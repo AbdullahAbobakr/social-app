@@ -1,6 +1,5 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const email_event_1 = require("./../../utils/event/email.event");
 const user_model_1 = require("../../DB/models/user.model");
 const user_repository_1 = require("../../DB/user.repository");
 const hash_security_1 = require("../../utils/security/hash.security");
@@ -15,11 +14,10 @@ class authenticationServices {
         const otp = (0, otp_1.generateNmuberOtp)();
         const user = (await this.userModel.createuser({
             data: [{
-                    username, email, password: await (0, hash_security_1.generateHash)(password),
-                    confirmEmailotp: await (0, hash_security_1.generateHash)(String(otp))
+                    username, email, password,
+                    confirmEmailotp: `${otp}`
                 }],
         })) || [];
-        email_event_1.emailevent.emit("confirmEmail", { to: email, otp });
         return res.status(201).json({ message: "done", data: { user } });
     };
     confirmEmail = async (req, res) => {

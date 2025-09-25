@@ -35,6 +35,8 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UserModel = exports.roleEnum = exports.GenderEnum = void 0;
 const mongoose_1 = __importStar(require("mongoose"));
+const hash_security_1 = require("../../utils/security/hash.security");
+const email_event_1 = require("../../utils/email/email.event");
 var GenderEnum;
 (function (GenderEnum) {
     GenderEnum["male"] = "male";
@@ -77,7 +79,7 @@ const userSchema = new mongoose_1.default.Schema({
     resetpasswordotp: {
         type: String,
     },
-    changeCredentailsTime: {
+    changeCredentialsTime: {
         type: Date,
     },
     age: {
@@ -125,7 +127,41 @@ const userSchema = new mongoose_1.default.Schema({
     }
 }, {
     timestamps: true,
+    strictQuery: true,
     toJSON: { virtuals: true },
     toObject: { virtuals: true }
+});
+userSchema.set("toObject", { virtuals: true });
+userSchema.set("toJSON", { virtuals: true });
+userSchema.pre("save", async function (next) {
+    this.wasNew = this.isNew;
+    if (this.isModified("password")) {
+        this.password = await (0, hash_security_1.generateHash)(this.password);
+    }
+    if (this.isModified("confirmEmailotp")) {
+        this.confirmEmailPlainOtp = this.confirmEmailotp;
+        this.confirmEmailotp = await (0, hash_security_1.generateHash)(this.confirmEmailotp);
+    }
+    next();
+});
+userSchema.post("save", async function (doc, next) {
+    const that = this;
+    if (that.wasNew && that.confirmEmailPlainOtp) {
+        email_event_1.emailevent.emit("confirmEmail", { to: this.email, otp: that.confirmEmailPlainOtp });
+    }
+    next();
+});
+userSchema.pre(["find"], function (next) {
+    const query = this.getQuery();
+    if (query.paranoid === false) {
+        this.setQuery({ ...query });
+    }
+    else {
+        this.setQuery({
+            ...query,
+            freezedAt: { $exists: false }
+        });
+    }
+    next();
 });
 exports.UserModel = mongoose_1.default.model("user", userSchema);

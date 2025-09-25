@@ -25,5 +25,5 @@ const tokenSchema = new mongoose.Schema<Itoken>({
     timestamps:true,
 })
 
-export const Tokenmodel = mongoose.model<Itoken>("token",tokenSchema)
+export const TokenModel = mongoose.model<Itoken>("token",tokenSchema)
 export type HtokenDocument = mongoose.HydratedDocument<Itoken>

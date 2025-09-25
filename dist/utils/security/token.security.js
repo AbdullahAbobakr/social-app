@@ -85,7 +85,7 @@ const createlogincredentials = async (user) => {
 exports.createlogincredentials = createlogincredentials;
 const decodeToken = async ({ authorization, tokenType = Tokenenum.access }) => {
     const userModel = new user_repository_1.userRepository(user_model_1.UserModel);
-    const tokenmodel = new token_repository_1.TokenRepository(token_model_1.Tokenmodel);
+    const tokenmodel = new token_repository_1.TokenRepository(token_model_1.TokenModel);
     const [bearerKey, token] = authorization.split(" ");
     if (!bearerKey || !token) {
         throw new error_response_1.unauthorizationException("invalid token");

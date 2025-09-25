@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Tokenmodel = void 0;
+exports.TokenModel = void 0;
 const mongoose_1 = __importDefault(require("mongoose"));
 const tokenSchema = new mongoose_1.default.Schema({
     jti: {
@@ -23,4 +23,4 @@ const tokenSchema = new mongoose_1.default.Schema({
 }, {
     timestamps: true,
 });
-exports.Tokenmodel = mongoose_1.default.model("token", tokenSchema);
+exports.TokenModel = mongoose_1.default.model("token", tokenSchema);

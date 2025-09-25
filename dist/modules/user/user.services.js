@@ -1,6 +1,10 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const error_response_1 = require("./../../utils/response/error.response");
+const bcrypt_1 = __importDefault(require("bcrypt"));
 const user_repository_1 = require("../../DB/user.repository");
 const user_model_1 = require("../../DB/models/user.model");
 const token_repository_1 = require("../../DB/token.repository");
@@ -11,7 +15,7 @@ const error_response_2 = require("../../utils/response/error.response");
 const s3_event_1 = require("../../utils/multer/s3.event");
 class userServices {
     usermodel = new user_repository_1.userRepository(user_model_1.UserModel);
-    tokenmodel = new token_repository_1.TokenRepository(token_model_1.Tokenmodel);
+    tokenmodel = new token_repository_1.TokenRepository(token_model_1.TokenModel);
     constructor() { }
     profile = async (req, res) => {
         return res.json({
@@ -87,6 +91,63 @@ class userServices {
                 Key,
             },
         });
+    };
+    updatePassword = async (req, res) => {
+        const { oldPassword, newPassword } = req.body;
+        const user = await this.usermodel.findone({
+            filter: {
+                _id: req.user?._id,
+            },
+        });
+        if (!user) {
+            throw new error_response_2.BadRequest("fail to update password");
+        }
+        const matchPasseord = await bcrypt_1.default.compare(oldPassword, user.password);
+        if (!matchPasseord) {
+            throw new error_response_2.BadRequest("invalid old password");
+        }
+        const hashPassword = await bcrypt_1.default.hash(newPassword, 10);
+        const updatePassword = await this.usermodel.updateone({
+            filter: {
+                _id: req.user?._id
+            },
+            update: {
+                password: hashPassword
+            }
+        });
+        return res.json({ message: "Done", data: { updatePassword } });
+    };
+    updateBasicInfo = async (req, res) => {
+        const { firstname, lastname, phone } = req.body;
+        const updatedBasicInfo = await this.usermodel.updateone({
+            filter: {
+                _id: req.user?._id
+            },
+            update: {
+                firstname,
+                lastname,
+                phone
+            }
+        });
+        if (!updatedBasicInfo) {
+            throw new error_response_2.BadRequest("fail to update basic info");
+        }
+        return res.json({ message: "Done", data: { updatedBasicInfo } });
+    };
+    updateEmail = async (req, res) => {
+        const { email } = req.body;
+        const updateEmail = await this.usermodel.updateone({
+            filter: {
+                _id: req.user?._id
+            },
+            update: {
+                email,
+            }
+        });
+        if (!updateEmail) {
+            throw new error_response_2.BadRequest("fail to update email");
+        }
+        return res.json({ message: "Done", data: { updateEmail } });
     };
     freezeAccount = async (req, res) => {
         const { userId } = req.params || {};

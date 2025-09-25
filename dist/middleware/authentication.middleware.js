@@ -17,6 +17,7 @@ const authentication = (tokenType = token_security_1.Tokenenum.access) => {
         });
         req.user = user;
         req.decoded = decoded;
+        console.log(tokenType);
         next();
     };
 };

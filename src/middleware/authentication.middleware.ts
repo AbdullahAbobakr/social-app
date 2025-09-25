@@ -18,7 +18,7 @@ export const authentication= ( tokenType:Tokenenum = Tokenenum.access)=>{
         })
         req.user=user
         req.decoded=decoded
-
+        console.log(tokenType)
         next()
 }}
 

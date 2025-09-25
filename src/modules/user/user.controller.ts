@@ -12,6 +12,13 @@ const userRouter = Router()
 userRouter.get("/profile", authentication(), userServices.profile)
 userRouter.post("/logout", authentication(), userServices.logout)
 
+userRouter.patch("/update-password" , authentication(),userServices.updatePassword)
+userRouter.get("/update-basic-info" , authentication(),userServices.updateBasicInfo)
+userRouter.patch("/update-email" , authentication(),userServices.updateEmail)
+
+
+
+
 userRouter.delete("{/:userId}/freeze-account",
     authentication(),
     validation(validators.frezzeAccount),
